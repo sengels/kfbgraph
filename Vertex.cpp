@@ -11,7 +11,12 @@
 
 // Qt
 #include <QtGui/QGraphicsRectItem>
+#include <QtGui/QFont>
+#include <QtGui/QFontMetrics>
 #include <QtCore/QList>
+#include <QtCore/QPointF>
+#include <QtCore/QRectF>
+#include <QtCore/QSizeF>
 #include <QtCore/QMap>
 #include <QtCore/QString>
 
@@ -21,6 +26,10 @@
 // other graphs
 #include "Graph.h"
 #include "Edge.h"
+
+static const QPen VERTEXPEN(Qt::NoPen);
+static const QBrush VERTEXBRUSH( QColor( 0xFF, 0xFF, 0xFF, 0x80 ) );
+static const QFont VERTEXFONT( "Helvetica", 12, QFont::Normal );
 
 Vertex::Vertex(Graph *g, uint id, const QString &text, QPointF nodePos,
                QGraphicsItem *parent) 
@@ -40,6 +49,16 @@ Vertex::Vertex(Graph *g, uint id, const QString &text, QPointF nodePos,
 	m_adjacent = QMap<uint,Vertex*>;
 
 	m_nodePos = nodePos;
+
+	setPen  ( VERTEXPEN );
+	setBrush( VERTEXBRUSH );
+
+	//find the size & position of the vertex
+	QFontMetrics m( VERTEXFONT );
+	QRect r = m.boundingRect(m_text);
+	// adjust for the fact that nodePos is the centre of the rect
+	setRect( QRectF( m_nodePos - QPointF( r.width()/2, r.height()/2 ),
+	         r.size().toSizeF() ) );
 
 	m_g->vertexAdded( this );
 }
@@ -62,6 +81,12 @@ QString Vertex::text() const
 void Vertex::setText( const QString &text )
 {
 	m_text = text;
+	//find the size & position of the vertex
+	QFontMetrics m( VERTEXFONT );
+	QRect r = m.boundingRect(m_text);
+	// adjust for the fact that nodePos is the centre of the rect
+	setRect( QRectF( m_nodePos - QPointF( r.width()/2, r.height()/2 ),
+	         r.size().toSizeF() ) );
 }
 
 QMap<uint,Vertex*> Vertex::adjacent() const
@@ -88,4 +113,7 @@ QPointF Vertex::nodePos() const
 void Vertex::setNodePos( QPointF pos )
 {
 	m_nodePos = pos;
+	// adjust for the fact that nodePos is the centre of the rect
+	setRect( QRectF( m_nodePos - QPointF(rect().width()/2, rect().height()/2),
+	         rect().size() ) );
 }

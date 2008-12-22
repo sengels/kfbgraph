@@ -9,10 +9,14 @@
 #include "Edge.h"
 
 #include <QtGui/QGraphicsLineItem>
+#include <QtGui/QPen>
+#include <QtGui/QColor>
 #include <QtCore/QLineF>
 
 #include "Vertex.h"
 #include "Graph.h"
+
+static const QPen EDGEPEN( QColor(Qt::black), 2.0 );
 
 Edge::Edge( Graph *g, Vertex *head, Vertex *tail, qreal weight,
             QGraphicsItem *parent )
@@ -23,6 +27,7 @@ Edge::Edge( Graph *g, Vertex *head, Vertex *tail, qreal weight,
 	m_weight = weight;
 
 	setLine( QLineF( m_head->nodePos(), m_tail->nodePos() ) );
+	setPen( EDGEPEN );
 	
 	m_g->edgeAdded(this);
 }
