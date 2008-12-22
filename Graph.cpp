@@ -55,8 +55,14 @@ void Graph::vertexRemoved( Vertex* v )
 	QList<Edge*>::iterator i = m_edges.begin();
 	for(;;) {
 		if( i->isHead(v) || i->isTail(v) ) {
-			// Delete the item at i and advance to the next item
+			Edge *e = *i;
+			//if the edge is in a QGraphicsScene we must remove it
+			if( e->scene() ) {
+				e->scene()->removeItem( e );
+			}
+			// Remove the item at i and advance to the next item
 			i = m_edges.erase( i );
+			delete e;
 			if( i == m_edges.end() )
 				goto end;
 		} else {
