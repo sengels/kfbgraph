@@ -11,8 +11,12 @@
 
 // Qt
 #include <QtGui/QGraphicsRectItem>
+#include <QtGui/QPainter>
 #include <QtGui/QFont>
 #include <QtGui/QFontMetrics>
+#include <QtGui/QPen>
+#include <QtGui/QBrush>
+#include <QtGui/QColor>
 #include <QtCore/QList>
 #include <QtCore/QPointF>
 #include <QtCore/QRectF>
@@ -116,4 +120,18 @@ void Vertex::setNodePos( QPointF pos )
 	// adjust for the fact that nodePos is the centre of the rect
 	setRect( QRectF( m_nodePos - QPointF(rect().width()/2, rect().height()/2),
 	         rect().size() ) );
+}
+
+
+virtual void Vertex::paint( QPainter *painter,
+                            const QStyleOptionGraphicsItem *option,
+                            QWidget *widget = 0 )
+{
+	p->setPen( pen() );
+	p->setBrush( brush() );
+	p->setFont( VERTEXFONT );
+
+	p->drawRect(rect());
+
+	p->drawText(rect(), Qt::AlignCenter, m_text);
 }
