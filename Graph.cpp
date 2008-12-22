@@ -6,6 +6,16 @@
 //
 // Copyright 2008 Henry de Valence <hdevalence@gmail.com>
 
+// own
+#include "Graph.h"
+
+// Qt
+#include <QtCore/QList>
+#include <QtCore/QMap>
+
+#include "Vertex.h"
+#include "Edge.h"
+
 Graph::Graph()
 {
 	m_vertices = QMap<uint,Vertex*>;

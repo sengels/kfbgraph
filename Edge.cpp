@@ -6,6 +6,14 @@
 //
 // Copyright 2008 Henry de Valence <hdevalence@gmail.com>
 
+#include "Edge.h"
+
+#include <QtGui/QGraphicsLineItem>
+#include <QtCore/QLineF>
+
+#include "Vertex.h"
+#include "Graph.h"
+
 Edge::Edge( Graph *g, Vertex *head, Vertex *tail, qreal weight,
             QGraphicsItem *parent )
     : QGraphicsLineItem(parent)

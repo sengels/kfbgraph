@@ -15,7 +15,7 @@
 #include <QtCore/QMap>
 #include <QtCore/QString>
 
-//C std lib
+//C std lib for rand()
 #include <stdlib.h>
 
 // other graphs
