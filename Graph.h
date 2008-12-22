@@ -69,7 +69,7 @@ public:
 private:
 	QMap<uint,Vertex*> m_vertices;
 	QList<Edge*> m_edges;
-}
+};
 
 #endif //include guard
 

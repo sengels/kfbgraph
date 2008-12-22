@@ -33,6 +33,6 @@ private:
 	Vertex *m_head;
 	Vertex *m_tail;
 	qreal m_w;
-}
+};
 #endif //include guard
 

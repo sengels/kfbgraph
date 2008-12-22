@@ -44,6 +44,6 @@ private:
 	QMap<uint,Vertex*> m_adjacent;
 	QPointF m_nodePos;
 	QString m_text;
-}
+};
 #endif //include guard
 
