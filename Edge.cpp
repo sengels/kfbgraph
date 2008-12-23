@@ -10,13 +10,14 @@
 
 #include <QtGui/QGraphicsLineItem>
 #include <QtGui/QPen>
+#include <QtGui/QBrush>
 #include <QtGui/QColor>
 #include <QtCore/QLineF>
 
 #include "Vertex.h"
 #include "Graph.h"
 
-static const QPen EDGEPEN( QColor(Qt::black), 2.0 );
+static const QPen EDGEPEN( QBrush(QColor(Qt::black)), 2.0 );
 
 Edge::Edge( Graph *g, Vertex *head, Vertex *tail, qreal weight,
             QGraphicsItem *parent )
@@ -24,10 +25,12 @@ Edge::Edge( Graph *g, Vertex *head, Vertex *tail, qreal weight,
 {
 	m_g = g;
 	m_head = head; m_tail = tail;
-	m_weight = weight;
+	m_w = weight;
 
 	setLine( QLineF( m_head->nodePos(), m_tail->nodePos() ) );
 	setPen( EDGEPEN );
+	//this prevents edges being drawn over top of vertices
+	setZValue(0.9);
 	
 	m_g->edgeAdded(this);
 }
@@ -58,12 +61,12 @@ bool Edge::isTail( Vertex *v ) const
 		return false;
 }
 
-qreal weight() const
+qreal Edge::weight() const
 {
 	return m_w;
 }
 
-void setWeight( qreal weight )
+void Edge::setWeight( const qreal &weight )
 {
 	m_w = weight;
 }

@@ -10,19 +10,22 @@
 #include "Graph.h"
 
 // Qt
+#include <QtGui/QGraphicsScene>
+#include <QtGui/QGraphicsItem>
+
 #include <QtCore/QList>
 #include <QtCore/QMap>
 #include <QtCore/QString>
 #include <QtCore/QTextStream>
-#include <QtDebug>
+#include <QtCore/QDebug>
 
 #include "Vertex.h"
 #include "Edge.h"
 
 Graph::Graph()
 {
-	m_vertices = QMap<uint,Vertex*>;
-	m_edges = QList<Edge*>;
+	m_vertices = QMap<uint,Vertex*>();
+	m_edges = QList<Edge*>();
 }
 
 QMap<uint,Vertex*> Graph::vertices() const
@@ -48,13 +51,13 @@ void Graph::edgeAdded( Edge* e )
 void Graph::vertexRemoved( Vertex* v )
 {
 	if( m_vertices.contains( v->id() ) )
-		m_vertices.remove( v );
+		m_vertices.remove( v->id() );
 
 	/* Once a vertex is removed we must look through for any edges
 	 * that link to it and remove them too */
 	QList<Edge*>::iterator i = m_edges.begin();
 	for(;;) {
-		if( i->isHead(v) || i->isTail(v) ) {
+		if( (*i)->isHead(v) || (*i)->isTail(v) ) {
 			Edge *e = *i;
 			//if the edge is in a QGraphicsScene we must remove it
 			if( e->scene() ) {
@@ -89,7 +92,7 @@ bool Graph::isValidNewId(uint id) const
 static const QString qE = "([0-9]+\\.?[0-9]*)"; //captures qreals
 static const QString uE = "([0-9]+)"; //captures uints
 
-static Graph* Graph::readGraph( QTextStream *s, QGraphicsItem *parent )
+Graph* Graph::readGraph( QTextStream *s, QGraphicsItem *parent )
 {
 	Graph *g = new Graph();
 
@@ -112,12 +115,12 @@ static Graph* Graph::readGraph( QTextStream *s, QGraphicsItem *parent )
 
 			QString label = vdef.cap(2);
 
-			qreal x = vdef.cap(3).toDouble();
+			qreal x = vdef.cap(3).toDouble(&ok);
 			if(!ok) {
 				qDebug() << "error: couldn't do toDouble(" << vdef.cap(3);
 				continue;
 			} else ok = false;
-			qreal y = vdef.cap(4).toDouble();
+			qreal y = vdef.cap(4).toDouble(&ok);
 			if(!ok) {
 				qDebug() << "error: couldn't do toDouble(" << vdef.cap(4);
 				continue;
@@ -144,7 +147,7 @@ static Graph* Graph::readGraph( QTextStream *s, QGraphicsItem *parent )
 				continue;
 			} else ok = false;
 
-			qreal w = edef.cap(3).toDouble();
+			qreal w = edef.cap(3).toDouble(&ok);
 			if(!ok) {
 				qDebug() << "error: couldn't do toDouble(" << edef.cap(3);
 				continue;
@@ -166,7 +169,7 @@ static Graph* Graph::readGraph( QTextStream *s, QGraphicsItem *parent )
 	return g;
 }
 
-static void Graph::writeGraph( QTextStream *s, Graph *g )
+void Graph::writeGraph( QTextStream *s, Graph *g )
 {
 	//get a copy to use a bunch of times
 	QMap<uint,Vertex*> vertices = g->vertices();
@@ -174,21 +177,21 @@ static void Graph::writeGraph( QTextStream *s, Graph *g )
 	    i != vertices.constEnd(); ++i )
 	{
 		//i.key is the id, which comes first
-		s << '\t' << i.key() << " [";
+		*s << '\t' << i.key() << " [";
 		//Replace " with \" to avoid confusion when loading
-		s << "label=\"" << i.value()->text().replace("\"", "\\\"") << "\",";
+		*s << "label=\"" << i.value()->text().replace("\"", "\\\"") << "\",";
 		QPointF p = i.value()->nodePos();
-		s << "pos=\"" << p.x() << " " << p.y() << "\"];\n";
+		*s << "pos=\"" << p.x() << " " << p.y() << "\"];\n";
 	}
 	//add a seperator between node defs and edge defs
-	s << "\n\n\n\n";
+	*s << "\n\n\n\n";
 	//get a copy to use a bunch of times
 	QList<Edge*> edges = g->edges();
-	for(QList<Edge*>::iterator i = edges.constBegin();
+	for(QList<Edge*>::const_iterator i = edges.constBegin();
 	    i != edges.constEnd(); ++i )
 	{
-		s << '\t' << i->head()->id() << " -- " << i->tail()->id();
-		s << " [weight=\"" << i->weight() << "\"];\n";
+		*s << '\t' << (*i)->head()->id() << " -- " << (*i)->tail()->id();
+		*s << " [weight=\"" << (*i)->weight() << "\"];\n";
 	}
 }
 

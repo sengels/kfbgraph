@@ -31,11 +31,11 @@
 #include "Graph.h"
 #include "Edge.h"
 
-static const QPen VERTEXPEN(Qt::NoPen);
+static const QPen VERTEXPEN(QBrush(QColor(Qt::black)), 0.5);
 static const QBrush VERTEXBRUSH( QColor( 0xFF, 0xFF, 0xFF, 0x80 ) );
 static const QFont VERTEXFONT( "Helvetica", 12, QFont::Normal );
 
-Vertex::Vertex(Graph *g, uint id, const QString &text, QPointF nodePos,
+Vertex::Vertex(Graph *g, uint id, QString text, QPointF nodePos,
                QGraphicsItem *parent) 
       : QGraphicsRectItem(parent)
 {
@@ -49,8 +49,8 @@ Vertex::Vertex(Graph *g, uint id, const QString &text, QPointF nodePos,
 		}
 	m_id = id;
 
-	m_edges = QList<Edge*>;
-	m_adjacent = QMap<uint,Vertex*>;
+	m_edges = QList<Edge*>();
+	m_adjacent = QMap<uint,Vertex*>();
 
 	m_nodePos = nodePos;
 
@@ -62,7 +62,9 @@ Vertex::Vertex(Graph *g, uint id, const QString &text, QPointF nodePos,
 	QRect r = m.boundingRect(m_text);
 	// adjust for the fact that nodePos is the centre of the rect
 	setRect( QRectF( m_nodePos - QPointF( r.width()/2, r.height()/2 ),
-	         r.size().toSizeF() ) );
+	         QSizeF( r.size() ) ) );
+
+	setZValue(2.0);
 
 	m_g->vertexAdded( this );
 }
@@ -90,7 +92,7 @@ void Vertex::setText( const QString &text )
 	QRect r = m.boundingRect(m_text);
 	// adjust for the fact that nodePos is the centre of the rect
 	setRect( QRectF( m_nodePos - QPointF( r.width()/2, r.height()/2 ),
-	         r.size().toSizeF() ) );
+	         QSizeF( r.size() ) ) );
 }
 
 QMap<uint,Vertex*> Vertex::adjacent() const
@@ -111,7 +113,7 @@ Edge* Vertex::createEdge( Vertex *tail, qreal weight )
 
 QPointF Vertex::nodePos() const
 {
-	return m_nodePos();
+	return m_nodePos;
 }
 
 void Vertex::setNodePos( QPointF pos )
@@ -123,15 +125,15 @@ void Vertex::setNodePos( QPointF pos )
 }
 
 
-virtual void Vertex::paint( QPainter *painter,
-                            const QStyleOptionGraphicsItem *option,
-                            QWidget *widget = 0 )
+void Vertex::paint( QPainter *painter,
+                    const QStyleOptionGraphicsItem *option,
+                    QWidget *widget )
 {
-	p->setPen( pen() );
-	p->setBrush( brush() );
-	p->setFont( VERTEXFONT );
+	painter->setPen( pen() );
+	painter->setBrush( brush() );
+	painter->setFont( VERTEXFONT );
 
-	p->drawRect(rect());
+	painter->drawRect(rect());
 
-	p->drawText(rect(), Qt::AlignCenter, m_text);
+	painter->drawText(rect(), Qt::AlignCenter, m_text);
 }

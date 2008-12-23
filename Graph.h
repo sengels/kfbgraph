@@ -14,6 +14,7 @@
 #include <QtCore/QMap>
 
 class QTextStream;
+class QGraphicsItem;
 
 class Vertex;
 class Edge;

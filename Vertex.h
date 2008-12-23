@@ -14,6 +14,10 @@
 #include <QtCore/QMap>
 #include <QtCore/QString>
 
+class QPainter;
+class QStyleOptionGraphicsItem;
+class QWidget;
+
 class Graph;
 class Edge;
 
@@ -38,12 +42,17 @@ public:
 	 * the node should be in the centre of the rect, not the corner */
 	QPointF nodePos() const;
 	void setNodePos( QPointF pos );
+
+	virtual void paint( QPainter *painter,
+	                    const QStyleOptionGraphicsItem *option,
+	                    QWidget *widget = 0 );
 private:
 	Graph *m_g;
 	QList<Edge*> m_edges;
 	QMap<uint,Vertex*> m_adjacent;
 	QPointF m_nodePos;
 	QString m_text;
+	uint m_id;
 };
 #endif //include guard
 
