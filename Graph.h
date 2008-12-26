@@ -12,6 +12,7 @@
 //#include <QtCore/QObject>
 #include <QtCore/QList>
 #include <QtCore/QMap>
+#include <QtCore/QPair>
 
 class QTextStream;
 class QGraphicsItem;
@@ -23,9 +24,17 @@ class Graph //: public QObject
 {
 	//Q_OBJECT
 public:
+	/** ctor */
 	Graph();
+	/**
+	 * @return a map of ids to the vertex pointers of the graph
+	 */
 	QMap<uint,Vertex*> vertices() const;
-	QList<Edge*> edges() const;
+	/**
+	 * @return a map of vertex pairs to edges in the graph
+	 * @note in an undirected graph both head,tail and tail,head should be checked
+	 */
+	QMap<QPair<Vertex*,Vertex*>,Edge*> edges() const;
 
 	void vertexAdded( Vertex* v );
 	void edgeAdded( Edge* e );
@@ -67,9 +76,30 @@ public:
 	 * @param g the graph to write
 	 */
 	static void  writeGraph(QTextStream *s, Graph *g);
+
+	/**
+	 * Lays out the graph using the Kamada-Kawai spring-based algorithm
+	 * @param maxiter the maximum number of iterations, -1 = until epsilon
+	 * @param epsilon epsilon
+	 * @param initialize if true, lay out the initial position as a regular
+	 * n-sided polygon, where n is the number of vertices*/
+	void layoutGraph( int maxiter, qreal epsilon, bool initialize = true );
 private:
+	//functions for implementing Kamada-Kawai algorithm
+	inline qreal kij( Vertex *i, Vertex *j );
+	inline qreal lij( Vertex *i, Vertex *j );
+	inline qreal dij( Vertex *i, Vertex *j );
+	qreal del_E__del_xm(Vertex *m);
+	qreal del_E__del_ym(Vertex *m);
+	qreal del2_E__del_x2m(Vertex *m);
+	qreal del2_E__delxm_delym(Vertex *m);
+	qreal del2_E__del_y2m(Vertex *m);
+	qreal dx(Vertex *m);
+	qreal dy(Vertex *m);
+	qreal delta_m(Vertex *m);
+
 	QMap<uint,Vertex*> m_vertices;
-	QList<Edge*> m_edges;
+	QMap<QPair<Vertex*,Vertex*>,Edge*> m_edges;
 };
 
 #endif //include guard

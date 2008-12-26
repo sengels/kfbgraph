@@ -9,12 +9,17 @@
 // own
 #include "Graph.h"
 
-// Qt
+//math
+#include <cmath>
+
+// QtGui
 #include <QtGui/QGraphicsScene>
 #include <QtGui/QGraphicsItem>
 
+// QtCore
 #include <QtCore/QList>
 #include <QtCore/QMap>
+#include <QtCore/QPair>
 #include <QtCore/QString>
 #include <QtCore/QTextStream>
 #include <QtCore/QDebug>
@@ -22,10 +27,23 @@
 #include "Vertex.h"
 #include "Edge.h"
 
+/* // not sure if these will be needed
+//like sine, but faster
+inline qreal fsin(qreal x)
+{
+	return x−pow(x,3)/6+pow(x,5)/120−pow(x,7)/5040+pow(x,9)/362880−pow(x,11)/39916800;
+}
+
+//like cosine, but faster
+inline qreal fcos(qreal x)
+{
+	return 1-pow(x,2)/2+pow(x,4)/24-pow(x,6)/720+pow(x,8)/40328-pow(x,10)/3628800;
+} */
+
 Graph::Graph()
 {
 	m_vertices = QMap<uint,Vertex*>();
-	m_edges = QList<Edge*>();
+	m_edges = QMap<QPair<Vertex*,Vertex*>,Edge*>();
 }
 
 QMap<uint,Vertex*> Graph::vertices() const
@@ -33,7 +51,7 @@ QMap<uint,Vertex*> Graph::vertices() const
 	return m_vertices;
 }
 
-QList<Edge*> Graph::edges() const
+QMap<QPair<Vertex*,Vertex*>,Edge*> Graph::edges() const
 {
 	return m_edges;
 }
@@ -45,7 +63,8 @@ void Graph::vertexAdded( Vertex* v )
 
 void Graph::edgeAdded( Edge* e )
 {
-	m_edges.append( e );
+	m_edges.insert( qMakePair(e->head(), e->tail()), e );
+	m_edges.insert( qMakePair(e->tail(), e->head()), e );
 }
 
 void Graph::vertexRemoved( Vertex* v )
@@ -55,7 +74,7 @@ void Graph::vertexRemoved( Vertex* v )
 
 	/* Once a vertex is removed we must look through for any edges
 	 * that link to it and remove them too */
-	QList<Edge*>::iterator i = m_edges.begin();
+	QMap<QPair<Vertex*,Vertex*>,Edge*>::iterator i = m_edges.begin();
 	for(;;) {
 		if( (*i)->isHead(v) || (*i)->isTail(v) ) {
 			Edge *e = *i;
@@ -79,7 +98,8 @@ void Graph::vertexRemoved( Vertex* v )
 /* Isolated nodes are not autoremoved so this is fairly simple */
 void Graph::edgeRemoved( Edge* e )
 {
-	m_edges.removeAll( e );
+	m_edges.remove( qMakePair(e->head(), e->tail()) );
+	m_edges.remove( qMakePair(e->tail(), e->head()) );
 }
 
 /* A valid id is one that isn't already used */
@@ -186,15 +206,153 @@ void Graph::writeGraph( QTextStream *s, Graph *g )
 	//add a seperator between node defs and edge defs
 	*s << "\n\n\n\n";
 	//get a copy to use a bunch of times
-	QList<Edge*> edges = g->edges();
-	for(QList<Edge*>::const_iterator i = edges.constBegin();
-	    i != edges.constEnd(); ++i )
+	QMap<QPair<Vertex*, Vertex*>, Edge*> edges = g->edges();
+	for(QMap<QPair<Vertex*, Vertex*>, Edge*>::const_iterator i =
+	    edges.constBegin(); i != edges.constEnd(); ++i )
 	{
 		*s << '\t' << (*i)->head()->id() << " -- " << (*i)->tail()->id();
 		*s << " [weight=\"" << (*i)->weight() << "\"];\n";
 	}
 }
 
+inline qreal Graph::kij( Vertex *i, Vertex *j )
+{
+	return m_edges.value(qMakePair(i,j))->weight() / pow( dij( i,j ), 2.0 );
+}
+
+inline qreal Graph::lij( Vertex *i, Vertex *j )
+{
+	return 100.0 * dij( i,j );
+}
+
+inline qreal Graph::dij( Vertex *i, Vertex *j )
+{
+	return sqrt( pow( i->nodePos().x() - j->nodePos().x(), 2.0 )
+	           + pow( i->nodePos().y() - j->nodePos().y(), 2.0 ) );
+}
+
+//kk89 eq 7
+qreal Graph::del_E__del_xm(Vertex *m)
+{
+	qreal result = 0;
+	QPointF mp = m->nodePos();
+	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+	    i != m_vertices.constEnd(); ++i )
+	{
+		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+			continue;
+		QPointF ip = m->nodePos();
+		qreal top = lij( m, *i ) * ( mp.x() - ip.x() );
+		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
+		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
+		result += kij( m,*i ) * ( ( mp.x() - ip.x() ) - top/bot);
+	}
+	return result;
+}
+
+//kk89 eq 8
+qreal Graph::del_E__del_ym(Vertex *m)
+{
+	qreal result = 0;
+	QPointF mp = m->nodePos();
+	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+	    i != m_vertices.constEnd(); ++i )
+	{
+		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+			continue;
+		QPointF ip = m->nodePos();
+		qreal top = lij( m, *i ) * ( mp.y() - ip.y() );
+		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
+		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
+		result += kij( m,*i ) * ( ( mp.y() - ip.y() ) - top/bot);
+	}
+	return result;
+}
+
+//kk89 eq 13
+qreal Graph::del2_E__del_x2m(Vertex *m)
+{
+	qreal result = 0;
+	QPointF mp = m->nodePos();
+	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+	    i != m_vertices.constEnd(); ++i )
+	{
+		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+			continue;
+		QPointF ip = m->nodePos();
+		qreal top = lij( m, *i ) * pow( mp.y() - ip.y(), 2.0 );
+		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
+		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
+		result += kij( m,*i ) * (1.0 - top/bot);
+	}
+	return result;
+}
+
+//kk89 eq 14, eq 15
+qreal Graph::del2_E__delxm_delym(Vertex *m)
+{
+	qreal result = 0;
+	QPointF mp = m->nodePos();
+	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+	    i != m_vertices.constEnd(); ++i )
+	{
+		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+			continue;
+		QPointF ip = m->nodePos();
+		qreal top = lij( m, *i ) * (mp.y() - ip.y()) * (mp.x() - ip.x());
+		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
+		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
+		result += kij( m,*i ) * (top/bot);
+	}
+	return result;
+}
+
+//kk89 eq 16
+qreal Graph::del2_E__del_y2m(Vertex *m)
+{
+	qreal result = 0;
+	QPointF mp = m->nodePos();
+	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+	    i != m_vertices.constEnd(); ++i )
+	{
+		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+			continue;
+		QPointF ip = m->nodePos();
+		qreal top = lij( m, *i ) * pow( mp.x() - ip.x(), 2.0 );
+		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
+		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
+		result += kij( m,*i ) * (1.0 - top/bot);
+	}
+	return result;
+}
+
+//from kk89 eq 11, eq 12
+qreal Graph::dx(Vertex *m)
+{
+	qreal top = ((del2_E__delxm_delym(m)*del_E__del_ym(m))/del2_E__del_y2m(m))
+	            - del_E__del_xm(m);
+	qreal bot = del2_E__del_x2m(m) - pow(del2_E__delxm_delym(m), 2.0)/
+	                                 del2_E__del_y2m(m);
+
+	return top/bot;
+}
+
+//from kk89 eq 11, eq 12
+qreal Graph::dy(Vertex *m)
+{
+	qreal top = ((del2_E__delxm_delym(m)*del_E__del_xm(m))/del2_E__del_x2m(m))
+	            - del_E__del_ym(m);
+	qreal bot = del2_E__del_y2m(m) - pow(del2_E__delxm_delym(m), 2.0)/
+	                                 del2_E__del_x2m(m);
+
+	return top/bot;
+}
+
+//kk89 eq 9
+qreal Graph::delta_m(Vertex *m)
+{
+	return sqrt( pow(del_E__del_xm(m), 2.0) + pow(del_E__del_ym(m), 2.0) );
+}
 
 
 

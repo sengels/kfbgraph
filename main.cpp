@@ -36,9 +36,9 @@ int main(int argc, char *argv[])
 	}
 
 	//get a copy to use a bunch of times
-	QList<Edge*> edges = g->edges();
-	for(QList<Edge*>::const_iterator i = edges.constBegin();
-	    i != edges.constEnd(); ++i )
+	QMap<QPair<Vertex*, Vertex*>, Edge*> edges = g->edges();
+	for(QMap<QPair<Vertex*, Vertex*>, Edge*>::const_iterator i =
+	    edges.constBegin(); i != edges.constEnd(); ++i )
 	{
 		s->addItem(*i);
 	}
