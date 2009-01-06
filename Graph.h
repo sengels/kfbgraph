@@ -24,6 +24,12 @@ class Graph //: public QObject
 {
 	//Q_OBJECT
 public:
+	///describes the graph layout algorithm
+	enum LayoutAlgorithm {
+		NGon, ///< Lays out graph as a regular n-gon
+		Random, ///< Lays out nodes randomly
+		KamadaKawai ///< Uses the Kamada-Kawai spring-based algorithm
+	};
 	/** ctor */
 	Graph();
 	/**
@@ -41,6 +47,20 @@ public:
 
 	void vertexRemoved( Vertex* v );
 	void edgeRemoved( Edge* e );
+
+#if 0
+	/**
+	 * Get the value of L, the desirable length of an edge
+	 * @return L
+	 */
+	qreal L();
+	/**
+	 * Set the value of L
+	 * @param L the new value of L
+	 * @see L()
+	 */
+	void setL(qreal L);
+#endif
 
 	bool isValidNewId(uint id) const;
 	/**
@@ -81,9 +101,11 @@ public:
 	 * Lays out the graph using the Kamada-Kawai spring-based algorithm
 	 * @param maxiter the maximum number of iterations, -1 = until epsilon
 	 * @param epsilon epsilon
+	 * @param algorithm the algorithm to use
 	 * @param initialize if true, lay out the initial position as a regular
 	 * n-sided polygon, where n is the number of vertices*/
-	void layoutGraph( int maxiter, qreal epsilon, bool initialize = true );
+	void layoutGraph( int maxiter, qreal epsilon, bool initialize = true,
+	                  LayoutAlgorithm algorithm = KamadaKawai );
 private:
 	//functions for implementing Kamada-Kawai algorithm
 	inline qreal kij( Vertex *i, Vertex *j );
@@ -97,6 +119,10 @@ private:
 	qreal dx(Vertex *m);
 	qreal dy(Vertex *m);
 	qreal delta_m(Vertex *m);
+
+	void layoutNGon();
+	void layoutRandom(qreal max);
+	void layoutKamadaKawai(int maxiter, qreal epsilon, bool initialize);
 
 	QMap<uint,Vertex*> m_vertices;
 	QMap<QPair<Vertex*,Vertex*>,Edge*> m_edges;

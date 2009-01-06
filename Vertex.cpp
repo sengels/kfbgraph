@@ -122,8 +122,30 @@ void Vertex::setNodePos( QPointF pos )
 	// adjust for the fact that nodePos is the centre of the rect
 	setRect( QRectF( m_nodePos - QPointF(rect().width()/2, rect().height()/2),
 	         rect().size() ) );
+	for(QList<Edge*>::const_iterator i = m_edges.constBegin();
+	    i != m_edges.constEnd(); ++i )
+	{
+		(*i)->updatePos();
+	}
 }
 
+void Vertex::addEdge(Edge *e)
+{
+	m_edges.append(e);
+	if(e->head() == this)
+		m_adjacent.insert(e->tail()->id(), e->tail());
+	else
+		m_adjacent.insert(e->head()->id(), e->head());
+}
+
+void Vertex::removeEdge(Edge *e)
+{
+	m_edges.removeAll(e);
+	if(e->head() == this)
+		m_adjacent.remove(e->tail()->id());
+	else
+		m_adjacent.remove(e->head()->id());
+}
 
 void Vertex::paint( QPainter *painter,
                     const QStyleOptionGraphicsItem *option,

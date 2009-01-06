@@ -13,6 +13,7 @@
 #include <QtGui/QBrush>
 #include <QtGui/QColor>
 #include <QtCore/QLineF>
+#include <QtCore/QDebug>
 
 #include "Vertex.h"
 #include "Graph.h"
@@ -71,4 +72,8 @@ void Edge::setWeight( const qreal &weight )
 	m_w = weight;
 }
 
-
+void Edge::updatePos()
+{
+// 	qDebug() << "UpdatePos setting to " <<QLineF( m_head->nodePos(), m_tail->nodePos() );
+	setLine( QLineF( m_head->nodePos(), m_tail->nodePos() ) );
+}

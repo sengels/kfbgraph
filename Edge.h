@@ -28,6 +28,8 @@ public:
 
 	qreal weight() const;
 	void setWeight(const qreal &w);
+
+	void updatePos();
 private:
 	Graph *m_g;
 	Vertex *m_head;

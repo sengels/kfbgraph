@@ -19,10 +19,6 @@ int main(int argc, char *argv[])
 	infile.open(QIODevice::ReadOnly|QIODevice::Text);
 	QTextStream istream(&infile);
 	Graph *g = Graph::readGraph(&istream);
-	QFile outfile(args.at(2));
-	outfile.open(QIODevice::WriteOnly|QIODevice::Text);
-	QTextStream ostream(&outfile);
-	Graph::writeGraph(&ostream, g);
 
 
 	QGraphicsScene *s = new QGraphicsScene();
@@ -44,7 +40,20 @@ int main(int argc, char *argv[])
 	}
 
 	QGraphicsView *view = new QGraphicsView(s);
+	view->resize(700, 900);
+	view->setRenderHint(QPainter::Antialiasing);
 	view->show();
-	view->scale(5, 5);
+	//view->scale(5,5);
+
+
+	g->layoutGraph(10,0.1,true,Graph::KamadaKawai);
+	//g->layoutGraph(-1,0.1,true,Graph::NGon);
+
+
+	QFile outfile(args.at(2));
+	outfile.open(QIODevice::WriteOnly|QIODevice::Text);
+	QTextStream ostream(&outfile);
+	Graph::writeGraph(&ostream, g);
+
 	return app.exec();
 }

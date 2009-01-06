@@ -43,6 +43,9 @@ public:
 	QPointF nodePos() const;
 	void setNodePos( QPointF pos );
 
+	void addEdge(Edge *e);
+	void removeEdge(Edge *e);
+
 	virtual void paint( QPainter *painter,
 	                    const QStyleOptionGraphicsItem *option,
 	                    QWidget *widget = 0 );

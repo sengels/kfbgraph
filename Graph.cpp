@@ -65,6 +65,8 @@ void Graph::edgeAdded( Edge* e )
 {
 	m_edges.insert( qMakePair(e->head(), e->tail()), e );
 	m_edges.insert( qMakePair(e->tail(), e->head()), e );
+	e->head()->addEdge(e);
+	e->tail()->addEdge(e);
 }
 
 void Graph::vertexRemoved( Vertex* v )
@@ -75,7 +77,8 @@ void Graph::vertexRemoved( Vertex* v )
 	/* Once a vertex is removed we must look through for any edges
 	 * that link to it and remove them too */
 	QMap<QPair<Vertex*,Vertex*>,Edge*>::iterator i = m_edges.begin();
-	for(;;) {
+	for(QMap<QPair<Vertex*,Vertex*>,Edge*>::iterator i;
+	    i != m_edges.end(); ++i) {
 		if( (*i)->isHead(v) || (*i)->isTail(v) ) {
 			Edge *e = *i;
 			//if the edge is in a QGraphicsScene we must remove it
@@ -85,14 +88,10 @@ void Graph::vertexRemoved( Vertex* v )
 			// Remove the item at i and advance to the next item
 			i = m_edges.erase( i );
 			delete e;
-			if( i == m_edges.end() )
-				goto end;
 		} else {
 			++i; //advance to next item
 		}
 	}
-	end:
-	return;
 }
 
 /* Isolated nodes are not autoremoved so this is fairly simple */
@@ -100,6 +99,8 @@ void Graph::edgeRemoved( Edge* e )
 {
 	m_edges.remove( qMakePair(e->head(), e->tail()) );
 	m_edges.remove( qMakePair(e->tail(), e->head()) );
+	e->head()->removeEdge(e);
+	e->tail()->removeEdge(e);
 }
 
 /* A valid id is one that isn't already used */
@@ -222,7 +223,7 @@ inline qreal Graph::kij( Vertex *i, Vertex *j )
 
 inline qreal Graph::lij( Vertex *i, Vertex *j )
 {
-	return 100.0 * dij( i,j );
+	return dij( i,j );
 }
 
 inline qreal Graph::dij( Vertex *i, Vertex *j )
@@ -241,12 +242,14 @@ qreal Graph::del_E__del_xm(Vertex *m)
 	{
 		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
 			continue;
-		QPointF ip = m->nodePos();
+		QPointF ip = (*i)->nodePos();
 		qreal top = lij( m, *i ) * ( mp.x() - ip.x() );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
 		result += kij( m,*i ) * ( ( mp.x() - ip.x() ) - top/bot);
+		qDebug() << "del_E__del_xm" << result;
 	}
+	qDebug() << "final del_E__del_xm" << result;
 	return result;
 }
 
@@ -260,12 +263,14 @@ qreal Graph::del_E__del_ym(Vertex *m)
 	{
 		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
 			continue;
-		QPointF ip = m->nodePos();
+		QPointF ip = (*i)->nodePos();
 		qreal top = lij( m, *i ) * ( mp.y() - ip.y() );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
 		result += kij( m,*i ) * ( ( mp.y() - ip.y() ) - top/bot);
+		qDebug() << "del_E__del_ym" << result;
 	}
+	qDebug() << "final del_E__del_ym" << result;
 	return result;
 }
 
@@ -279,12 +284,14 @@ qreal Graph::del2_E__del_x2m(Vertex *m)
 	{
 		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
 			continue;
-		QPointF ip = m->nodePos();
+		QPointF ip = (*i)->nodePos();
 		qreal top = lij( m, *i ) * pow( mp.y() - ip.y(), 2.0 );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
 		result += kij( m,*i ) * (1.0 - top/bot);
+		qDebug() << "del2_E__del_x2m" << result;
 	}
+	qDebug() << "final del2_E__del_x2m" << result;
 	return result;
 }
 
@@ -298,12 +305,14 @@ qreal Graph::del2_E__delxm_delym(Vertex *m)
 	{
 		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
 			continue;
-		QPointF ip = m->nodePos();
+		QPointF ip = (*i)->nodePos();
 		qreal top = lij( m, *i ) * (mp.y() - ip.y()) * (mp.x() - ip.x());
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
 		result += kij( m,*i ) * (top/bot);
+		qDebug() << "del2_E__delxm_delym" << result;
 	}
+	qDebug() << "final del2_E__delxm_delym" << result;
 	return result;
 }
 
@@ -317,12 +326,14 @@ qreal Graph::del2_E__del_y2m(Vertex *m)
 	{
 		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
 			continue;
-		QPointF ip = m->nodePos();
+		QPointF ip = (*i)->nodePos();
 		qreal top = lij( m, *i ) * pow( mp.x() - ip.x(), 2.0 );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
 		result += kij( m,*i ) * (1.0 - top/bot);
+		qDebug() << "del2_E__del_y2m" << result;
 	}
+	qDebug() << "final del2_E__del_y2m" << result;
 	return result;
 }
 
@@ -334,7 +345,9 @@ qreal Graph::dx(Vertex *m)
 	qreal bot = del2_E__del_x2m(m) - pow(del2_E__delxm_delym(m), 2.0)/
 	                                 del2_E__del_y2m(m);
 
-	return top/bot;
+	qreal result = top/bot;
+	qDebug() << "dx" << result;
+	return result;
 }
 
 //from kk89 eq 11, eq 12
@@ -345,21 +358,88 @@ qreal Graph::dy(Vertex *m)
 	qreal bot = del2_E__del_y2m(m) - pow(del2_E__delxm_delym(m), 2.0)/
 	                                 del2_E__del_x2m(m);
 
-	return top/bot;
+	qreal result = top/bot;
+	qDebug() << "dy" << result;
+	return result;
 }
 
 //kk89 eq 9
 qreal Graph::delta_m(Vertex *m)
 {
-	return sqrt( pow(del_E__del_xm(m), 2.0) + pow(del_E__del_ym(m), 2.0) );
+	qreal a = pow(del_E__del_xm(m), 2.0);
+	qreal b = pow(del_E__del_ym(m), 2.0);
+	return sqrt( a + b );
+}
+
+void Graph::layoutGraph( int maxiter, qreal epsilon, bool initialize,
+                         LayoutAlgorithm algorithm )
+{
+	switch(algorithm) {
+	case NGon:
+		layoutNGon();
+		break;
+	case KamadaKawai:
+		layoutKamadaKawai(maxiter,epsilon,initialize);
+		break;
+	}
 }
 
 
+void Graph::layoutNGon()
+{
+	int n = m_vertices.size();
+	qreal inc = (2.0 * M_PI)/n;
+	qreal angle = 0.1;
+	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+	    i != m_vertices.constEnd(); ++i )
+	{
+		//qDebug() << *i << "set to" << QPointF(100.0*cos(angle),100.0*sin(angle));
+		(*i)->setNodePos( QPointF(100.0*cos(angle),100.0*sin(angle)) );
+		angle += inc;
+	}
+}
 
 
+void Graph::layoutRandom(qreal max)
+{
+	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+	    i != m_vertices.constEnd(); ++i )
+	{
+		qreal x = (drand48() * max * 2 ) -max;
+		qreal y = (drand48() * max * 2 ) -max;
+		(*i)->setNodePos( QPointF(x,y) );
+	}
+}
 
-
-
-
-
+void Graph::layoutKamadaKawai( int maxiter, qreal epsilon, bool initialize)
+{
+	qDebug() << "Laying out KamadaKawai";
+	if( initialize )
+		//layoutRandom( 100.0 );
+		layoutNGon();
+	if(maxiter < 0)
+		maxiter = 65535;
+	for(int iteration = 0; iteration < maxiter; ++iteration) {
+		uint id = 0;
+		qreal maxdelta_m = 0.0;
+		for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
+		    i != m_vertices.constEnd(); ++i )
+		{
+			qreal curdelta_m = delta_m(*i);
+			qDebug() << curdelta_m << "\t" << maxdelta_m;
+			if( curdelta_m > maxdelta_m ) {
+				maxdelta_m = curdelta_m;
+				id = (*i)->id();
+			}
+		}
+		qDebug() << id;
+		Vertex *m = m_vertices.value(id);
+		while(true) {
+			QPointF delta = QPointF(dx(m),dy(m));
+			m->setNodePos( m->nodePos() + delta );
+			if(delta_m(m) < epsilon)
+				break;
+		}
+	}
+}
 
