@@ -125,7 +125,7 @@ Graph* Graph::readGraph( QTextStream *s, QGraphicsItem *parent )
 	while( !s->atEnd() ) {
 		QString curline = s->readLine();
 		if( curline.contains(vdef) ) { //Does this line define a vertex?
-			qDebug() << vdef.pattern() << "  MATCHES  " << curline;
+			//qDebug() << vdef.pattern() << "  MATCHES  " << curline;
 
 			bool ok = false; //pessimists are never dissapointed
 			uint id = vdef.cap(1).toUInt(&ok);
@@ -153,7 +153,7 @@ Graph* Graph::readGraph( QTextStream *s, QGraphicsItem *parent )
 			Vertex *v = new Vertex(g,id,label,QPointF(x,y),parent);
 
 		} else if( curline.contains(edef) ) { //Does this line define an edge?
-			qDebug() << edef.pattern() << "  MATCHES  " << curline;
+			//qDebug() << edef.pattern() << "  MATCHES  " << curline;
 			bool ok = false; //pessimists are never dissapointed
 
 			uint head_id = edef.cap(1).toUInt(&ok);
@@ -223,7 +223,7 @@ inline qreal Graph::kij( Vertex *i, Vertex *j )
 
 inline qreal Graph::lij( Vertex *i, Vertex *j )
 {
-	return 1.1 * dij( i,j );
+	return 100.0;
 }
 
 inline qreal Graph::dij( Vertex *i, Vertex *j )
@@ -236,7 +236,7 @@ inline qreal Graph::dij( Vertex *i, Vertex *j )
 qreal Graph::del_E__del_xm(Vertex *m)
 {
 	qreal result = 0;
-	qDebug() << "begin del_E__del_xm" << result;
+	//qDebug() << "begin del_E__del_xm" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -247,13 +247,13 @@ qreal Graph::del_E__del_xm(Vertex *m)
 		qreal top = lij( m, *i ) * ( mp.x() - ip.x() );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
-		qDebug() << "\tkij( m,*i )" << kij( m,*i );
-		qDebug() << "\t( mp.x() - ip.x() )" << ( mp.x() - ip.x() );
-		qDebug() << "\ttop/bot" << top << bot <<top/bot;
+		//qDebug() << "\tkij( m,*i )" << kij( m,*i );
+		//qDebug() << "\t( mp.x() - ip.x() )" << ( mp.x() - ip.x() );
+		//qDebug() << "\ttop/bot" << top << bot <<top/bot;
 		result += kij( m,*i ) * ( ( mp.x() - ip.x() ) - top/bot);
-		qDebug() << "del_E__del_xm" << result;
+		//qDebug() << "del_E__del_xm" << result;
 	}
-	qDebug() << "final del_E__del_xm" << result;
+	//qDebug() << "final del_E__del_xm" << result;
 	return result;
 }
 
@@ -261,7 +261,7 @@ qreal Graph::del_E__del_xm(Vertex *m)
 qreal Graph::del_E__del_ym(Vertex *m)
 {
 	qreal result = 0;
-	qDebug() << "begin del_E__del_ym" << result;
+	//qDebug() << "begin del_E__del_ym" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -272,13 +272,13 @@ qreal Graph::del_E__del_ym(Vertex *m)
 		qreal top = lij( m, *i ) * ( mp.y() - ip.y() );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
-		qDebug() << "\tkij( m,*i )" << kij( m,*i );
-		qDebug() << "\t( mp.y() - ip.y() )" << ( mp.y() - ip.y() );
-		qDebug() << "\ttop/bot" << top << bot << top/bot;
+		//qDebug() << "\tkij( m,*i )" << kij( m,*i );
+		//qDebug() << "\t( mp.y() - ip.y() )" << ( mp.y() - ip.y() );
+		//qDebug() << "\ttop/bot" << top << bot << top/bot;
 		result += kij( m,*i ) * ( ( mp.y() - ip.y() ) - top/bot);
-		qDebug() << "del_E__del_ym" << result;
+		//qDebug() << "del_E__del_ym" << result;
 	}
-	qDebug() << "final del_E__del_ym" << result;
+	//qDebug() << "final del_E__del_ym" << result;
 	return result;
 }
 
@@ -286,7 +286,7 @@ qreal Graph::del_E__del_ym(Vertex *m)
 qreal Graph::del2_E__del_x2m(Vertex *m)
 {
 	qreal result = 0;
-	qDebug() << "begin del2_E__del_x2m" << result;
+	//qDebug() << "begin del2_E__del_x2m" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -298,9 +298,9 @@ qreal Graph::del2_E__del_x2m(Vertex *m)
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
 		result += kij( m,*i ) * (1.0 - top/bot);
-		qDebug() << "del2_E__del_x2m" << result;
+		//qDebug() << "del2_E__del_x2m" << result;
 	}
-	qDebug() << "final del2_E__del_x2m" << result;
+	//qDebug() << "final del2_E__del_x2m" << result;
 	return result;
 }
 
@@ -308,7 +308,7 @@ qreal Graph::del2_E__del_x2m(Vertex *m)
 qreal Graph::del2_E__delxm_delym(Vertex *m)
 {
 	qreal result = 0;
-	qDebug() << "begin del2_E__delxm_delym" << result;
+	//qDebug() << "begin del2_E__delxm_delym" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -320,9 +320,9 @@ qreal Graph::del2_E__delxm_delym(Vertex *m)
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
 		result += kij( m,*i ) * (top/bot);
-		qDebug() << "del2_E__delxm_delym" << result;
+		//qDebug() << "del2_E__delxm_delym" << result;
 	}
-	qDebug() << "final del2_E__delxm_delym" << result;
+	//qDebug() << "final del2_E__delxm_delym" << result;
 	return result;
 }
 
@@ -330,7 +330,7 @@ qreal Graph::del2_E__delxm_delym(Vertex *m)
 qreal Graph::del2_E__del_y2m(Vertex *m)
 {
 	qreal result = 0;
-	qDebug() << "begin del2_E__del_y2m" << result;
+	//qDebug() << "begin del2_E__del_y2m" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -342,9 +342,9 @@ qreal Graph::del2_E__del_y2m(Vertex *m)
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
 		result += kij( m,*i ) * (1.0 - top/bot);
-		qDebug() << "del2_E__del_y2m" << result;
+		//qDebug() << "del2_E__del_y2m" << result;
 	}
-	qDebug() << "final del2_E__del_y2m" << result;
+	//qDebug() << "final del2_E__del_y2m" << result;
 	return result;
 }
 
@@ -357,7 +357,7 @@ qreal Graph::dx(Vertex *m)
 	                                 del2_E__del_y2m(m);
 
 	qreal result = top/bot;
-	qDebug() << "dx" << result;
+	//qDebug() << "dx" << result;
 	return result;
 }
 
@@ -370,7 +370,7 @@ qreal Graph::dy(Vertex *m)
 	                                 del2_E__del_x2m(m);
 
 	qreal result = top/bot;
-	qDebug() << "dy" << result;
+	//qDebug() << "dy" << result;
 	return result;
 }
 
@@ -413,8 +413,8 @@ void Graph::layoutKamadaKawai( int maxiter, qreal epsilon, bool initialize)
 {
 	qDebug() << "Laying out KamadaKawai";
 	if( initialize )
-		//layoutRandom( 100.0 );
-		layoutNGon();
+		layoutRandom( 100.0 );
+		//layoutNGon();
 	if(maxiter < 0)
 		maxiter = 65535;
 	for(int iteration = 0; iteration < maxiter; ++iteration) {
@@ -424,19 +424,19 @@ void Graph::layoutKamadaKawai( int maxiter, qreal epsilon, bool initialize)
 		    i != m_vertices.constEnd(); ++i )
 		{
 			qreal curdelta_m = qAbs(delta_m(*i));
-			qDebug() << "curdelta_m,maxdelta_m"<< curdelta_m << "\t" << maxdelta_m;
+			//qDebug() << "curdelta_m,maxdelta_m"<< curdelta_m << "\t" << maxdelta_m;
 			if( curdelta_m >= maxdelta_m ) {
 				maxdelta_m = curdelta_m;
 				id = (*i)->id();
 			}
 		}
-		qDebug() << "Picked node with id=" << id;
 		Vertex *m = m_vertices.value(id);
 		qreal curdx = dx(m);
 		qreal curdy = dy(m);
+		qDebug() << "Picked node with id=" << id <<", moving by" << QPointF(curdx,curdy) << " to "<< m->nodePos();
 		m->setNodePos( m->nodePos() + QPointF(curdx,curdy) );
 		if(qAbs(delta_m(m)) < epsilon ) {
-			qDebug() << "Breaking early, iteration, delta_m, epsilon" << iteration << qAbs(delta_m(m)) << epsilon;
+			qDebug() << "Breaking early: iteration, delta_m, epsilon" << iteration << qAbs(delta_m(m)) << epsilon;
 			break;
 		}
 	}
