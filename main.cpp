@@ -51,11 +51,12 @@ int main(int argc, char *argv[])
 
 	view->fitInView( view->scene()->sceneRect(),Qt::KeepAspectRatio);
 
-
+#if 0
 	QFile outfile(args.at(2));
 	outfile.open(QIODevice::WriteOnly|QIODevice::Text);
 	QTextStream ostream(&outfile);
 	Graph::writeGraph(&ostream, g);
+#endif
 
 	return app.exec();
 }
