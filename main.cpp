@@ -46,8 +46,10 @@ int main(int argc, char *argv[])
 	//view->scale(5,5);
 
 
-	g->layoutGraph(10,0.1,true,Graph::KamadaKawai);
-	//g->layoutGraph(-1,0.1,true,Graph::NGon);
+	//g->layoutNGon();
+	g->layoutKamadaKawai(-1,0.0001,true);
+
+	view->fitInView( view->scene()->sceneRect(),Qt::KeepAspectRatio);
 
 
 	QFile outfile(args.at(2));

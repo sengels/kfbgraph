@@ -97,15 +97,16 @@ public:
 	 */
 	static void  writeGraph(QTextStream *s, Graph *g);
 
+	void layoutNGon();
+	void layoutRandom(qreal max);
+
 	/**
 	 * Lays out the graph using the Kamada-Kawai spring-based algorithm
 	 * @param maxiter the maximum number of iterations, -1 = until epsilon
 	 * @param epsilon epsilon
-	 * @param algorithm the algorithm to use
 	 * @param initialize if true, lay out the initial position as a regular
 	 * n-sided polygon, where n is the number of vertices*/
-	void layoutGraph( int maxiter, qreal epsilon, bool initialize = true,
-	                  LayoutAlgorithm algorithm = KamadaKawai );
+	void layoutKamadaKawai(int maxiter, qreal epsilon, bool initialize);
 private:
 	//functions for implementing Kamada-Kawai algorithm
 	inline qreal kij( Vertex *i, Vertex *j );
@@ -119,10 +120,6 @@ private:
 	qreal dx(Vertex *m);
 	qreal dy(Vertex *m);
 	qreal delta_m(Vertex *m);
-
-	void layoutNGon();
-	void layoutRandom(qreal max);
-	void layoutKamadaKawai(int maxiter, qreal epsilon, bool initialize);
 
 	QMap<uint,Vertex*> m_vertices;
 	QMap<QPair<Vertex*,Vertex*>,Edge*> m_edges;

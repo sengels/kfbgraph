@@ -223,7 +223,7 @@ inline qreal Graph::kij( Vertex *i, Vertex *j )
 
 inline qreal Graph::lij( Vertex *i, Vertex *j )
 {
-	return dij( i,j );
+	return 1.1 * dij( i,j );
 }
 
 inline qreal Graph::dij( Vertex *i, Vertex *j )
@@ -236,6 +236,7 @@ inline qreal Graph::dij( Vertex *i, Vertex *j )
 qreal Graph::del_E__del_xm(Vertex *m)
 {
 	qreal result = 0;
+	qDebug() << "begin del_E__del_xm" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -246,6 +247,9 @@ qreal Graph::del_E__del_xm(Vertex *m)
 		qreal top = lij( m, *i ) * ( mp.x() - ip.x() );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
+		qDebug() << "\tkij( m,*i )" << kij( m,*i );
+		qDebug() << "\t( mp.x() - ip.x() )" << ( mp.x() - ip.x() );
+		qDebug() << "\ttop/bot" << top << bot <<top/bot;
 		result += kij( m,*i ) * ( ( mp.x() - ip.x() ) - top/bot);
 		qDebug() << "del_E__del_xm" << result;
 	}
@@ -257,6 +261,7 @@ qreal Graph::del_E__del_xm(Vertex *m)
 qreal Graph::del_E__del_ym(Vertex *m)
 {
 	qreal result = 0;
+	qDebug() << "begin del_E__del_ym" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -267,6 +272,9 @@ qreal Graph::del_E__del_ym(Vertex *m)
 		qreal top = lij( m, *i ) * ( mp.y() - ip.y() );
 		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
 		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
+		qDebug() << "\tkij( m,*i )" << kij( m,*i );
+		qDebug() << "\t( mp.y() - ip.y() )" << ( mp.y() - ip.y() );
+		qDebug() << "\ttop/bot" << top << bot << top/bot;
 		result += kij( m,*i ) * ( ( mp.y() - ip.y() ) - top/bot);
 		qDebug() << "del_E__del_ym" << result;
 	}
@@ -278,6 +286,7 @@ qreal Graph::del_E__del_ym(Vertex *m)
 qreal Graph::del2_E__del_x2m(Vertex *m)
 {
 	qreal result = 0;
+	qDebug() << "begin del2_E__del_x2m" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -299,6 +308,7 @@ qreal Graph::del2_E__del_x2m(Vertex *m)
 qreal Graph::del2_E__delxm_delym(Vertex *m)
 {
 	qreal result = 0;
+	qDebug() << "begin del2_E__delxm_delym" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -320,6 +330,7 @@ qreal Graph::del2_E__delxm_delym(Vertex *m)
 qreal Graph::del2_E__del_y2m(Vertex *m)
 {
 	qreal result = 0;
+	qDebug() << "begin del2_E__del_y2m" << result;
 	QPointF mp = m->nodePos();
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
@@ -371,19 +382,6 @@ qreal Graph::delta_m(Vertex *m)
 	return sqrt( a + b );
 }
 
-void Graph::layoutGraph( int maxiter, qreal epsilon, bool initialize,
-                         LayoutAlgorithm algorithm )
-{
-	switch(algorithm) {
-	case NGon:
-		layoutNGon();
-		break;
-	case KamadaKawai:
-		layoutKamadaKawai(maxiter,epsilon,initialize);
-		break;
-	}
-}
-
 
 void Graph::layoutNGon()
 {
@@ -425,20 +423,21 @@ void Graph::layoutKamadaKawai( int maxiter, qreal epsilon, bool initialize)
 		for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 		    i != m_vertices.constEnd(); ++i )
 		{
-			qreal curdelta_m = delta_m(*i);
-			qDebug() << curdelta_m << "\t" << maxdelta_m;
-			if( curdelta_m > maxdelta_m ) {
+			qreal curdelta_m = qAbs(delta_m(*i));
+			qDebug() << "curdelta_m,maxdelta_m"<< curdelta_m << "\t" << maxdelta_m;
+			if( curdelta_m >= maxdelta_m ) {
 				maxdelta_m = curdelta_m;
 				id = (*i)->id();
 			}
 		}
-		qDebug() << id;
+		qDebug() << "Picked node with id=" << id;
 		Vertex *m = m_vertices.value(id);
-		while(true) {
-			QPointF delta = QPointF(dx(m),dy(m));
-			m->setNodePos( m->nodePos() + delta );
-			if(delta_m(m) < epsilon)
-				break;
+		qreal curdx = dx(m);
+		qreal curdy = dy(m);
+		m->setNodePos( m->nodePos() + QPointF(curdx,curdy) );
+		if(qAbs(delta_m(m)) < epsilon ) {
+			qDebug() << "Breaking early, iteration, delta_m, epsilon" << iteration << qAbs(delta_m(m)) << epsilon;
+			break;
 		}
 	}
 }
