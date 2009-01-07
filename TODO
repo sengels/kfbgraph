@@ -1,0 +1,3 @@
+After the implementation of the graph layout algorithm is done,
+add in a thing that uses KFacebook to fetch the data. Then fix
+bounding rect issues.
