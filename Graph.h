@@ -16,6 +16,7 @@
 
 class QTextStream;
 class QGraphicsItem;
+class QPointF;
 
 class Vertex;
 class Edge;
@@ -110,8 +111,12 @@ public:
 private:
 	//functions for implementing Kamada-Kawai algorithm
 	inline qreal kij( Vertex *i, Vertex *j );
+    // the weight of an edge between two points
 	inline qreal lij( Vertex *i, Vertex *j );
-	inline qreal dij( Vertex *i, Vertex *j );
+    // the distance of two points
+	inline qreal distanceVertex( Vertex *i, Vertex *j );
+   inline qreal distancePoint( const QPointF& i, const QPointF& j );
+
 	qreal del_E__del_xm(Vertex *m);
 	qreal del_E__del_ym(Vertex *m);
 	qreal del2_E__del_x2m(Vertex *m);

@@ -15,10 +15,6 @@
 #ifdef Q_CC_MSVC
 #define M_PI 3.14159
 #endif
-#ifdef _WIN32
-#define srand48 srand
-#define drand48 rand
-#endif
 
 // QtGui
 #include <QtGui/QGraphicsScene>
@@ -35,6 +31,7 @@
 #include "Vertex.h"
 #include "Edge.h"
 
+#define force -0.1
 /* // not sure if these will be needed
 //like sine, but faster
 inline qreal fsin(qreal x)
@@ -226,7 +223,10 @@ void Graph::writeGraph( QTextStream *s, Graph *g )
 
 inline qreal Graph::kij( Vertex *i, Vertex *j )
 {
-	return m_edges.value(qMakePair(i,j))->weight() / pow( dij( i,j ), 2.0 );
+    if(m_edges.contains(qMakePair(i,j)))
+        return m_edges.value(qMakePair(i,j))->weight() / pow( distanceVertex( i,j ), 2.0 );
+    else
+        return 0.0;
 }
 
 inline qreal Graph::lij( Vertex *i, Vertex *j )
@@ -234,10 +234,16 @@ inline qreal Graph::lij( Vertex *i, Vertex *j )
 	return 100.0;
 }
 
-inline qreal Graph::dij( Vertex *i, Vertex *j )
+inline qreal Graph::distanceVertex( Vertex *i, Vertex *j )
 {
-	return sqrt( pow( i->nodePos().x() - j->nodePos().x(), 2.0 )
-	           + pow( i->nodePos().y() - j->nodePos().y(), 2.0 ) );
+    // sqrt( (i.x-j.x)^2 + (i.y - j.y)^2 )
+	return distancePoint( i->nodePos(), j->nodePos() );
+}
+
+inline qreal Graph::distancePoint( const QPointF& i, const QPointF& j )
+{
+    // sqrt( (i.x-j.x)^2 + (i.y - j.y)^2 )
+	return sqrt( pow( i.x() - j.x(), 2.0 ) + pow( i.y() - j.y(), 2.0 ) );
 }
 
 //kk89 eq 7
@@ -249,16 +255,16 @@ qreal Graph::del_E__del_xm(Vertex *m)
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
 	{
-		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+		if( *i == m )
 			continue;
 		QPointF ip = (*i)->nodePos();
-		qreal top = lij( m, *i ) * ( mp.x() - ip.x() );
-		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
-		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
+		qreal top = kij( m, *i ) * ( mp.x() - ip.x() );
+		qreal bot = distancePoint( mp, ip );
+        qreal gravity = -1* force * ( mp.x() - ip.x() ) / pow(distancePoint(mp, ip), 3.0);
 		//qDebug() << "\tkij( m,*i )" << kij( m,*i );
 		//qDebug() << "\t( mp.x() - ip.x() )" << ( mp.x() - ip.x() );
 		//qDebug() << "\ttop/bot" << top << bot <<top/bot;
-		result += kij( m,*i ) * ( ( mp.x() - ip.x() ) - top/bot);
+		result += kij( m,*i ) * ( ( mp.x() - ip.x() ) - top / bot ) - gravity;
 		//qDebug() << "del_E__del_xm" << result;
 	}
 	//qDebug() << "final del_E__del_xm" << result;
@@ -274,16 +280,16 @@ qreal Graph::del_E__del_ym(Vertex *m)
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
 	{
-		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+		if( *i == m )
 			continue;
 		QPointF ip = (*i)->nodePos();
-		qreal top = lij( m, *i ) * ( mp.y() - ip.y() );
-		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
-		               + pow( mp.y() - ip.y(), 2.0), 0.5 );
+		qreal top = kij( m, *i ) * ( mp.y() - ip.y() );
+		qreal bot = distancePoint( mp, ip );
+        qreal gravity = -1* force * ( mp.y() - ip.y() ) / pow(distancePoint(mp, ip), 3.0);
 		//qDebug() << "\tkij( m,*i )" << kij( m,*i );
 		//qDebug() << "\t( mp.y() - ip.y() )" << ( mp.y() - ip.y() );
 		//qDebug() << "\ttop/bot" << top << bot << top/bot;
-		result += kij( m,*i ) * ( ( mp.y() - ip.y() ) - top/bot);
+		result += kij( m,*i ) * ( ( mp.y() - ip.y() ) - top / bot) + gravity;
 		//qDebug() << "del_E__del_ym" << result;
 	}
 	//qDebug() << "final del_E__del_ym" << result;
@@ -291,6 +297,7 @@ qreal Graph::del_E__del_ym(Vertex *m)
 }
 
 //kk89 eq 13
+// second derivate after x_m
 qreal Graph::del2_E__del_x2m(Vertex *m)
 {
 	qreal result = 0;
@@ -299,13 +306,13 @@ qreal Graph::del2_E__del_x2m(Vertex *m)
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
 	{
-		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+		if( *i == m )
 			continue;
 		QPointF ip = (*i)->nodePos();
-		qreal top = lij( m, *i ) * pow( mp.y() - ip.y(), 2.0 );
-		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
-		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
-		result += kij( m,*i ) * (1.0 - top/bot);
+		qreal top = kij( m, *i ) * pow( mp.y() - ip.y(), 2.0 );
+		qreal bot = pow( distancePoint( mp, ip ), 3.0 );
+        qreal gravity = 3*pow( mp.x() - ip.x(), 2.0 )/pow( distancePoint( mp, ip ), 5.0 ) - 1 / pow( distancePoint( mp, ip ), 3.0 );
+		result += kij( m,*i ) * (1.0 - top / bot) + gravity;
 		//qDebug() << "del2_E__del_x2m" << result;
 	}
 	//qDebug() << "final del2_E__del_x2m" << result;
@@ -313,6 +320,7 @@ qreal Graph::del2_E__del_x2m(Vertex *m)
 }
 
 //kk89 eq 14, eq 15
+// mixed second derivative
 qreal Graph::del2_E__delxm_delym(Vertex *m)
 {
 	qreal result = 0;
@@ -321,13 +329,13 @@ qreal Graph::del2_E__delxm_delym(Vertex *m)
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
 	{
-		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+		if( *i == m )
 			continue;
 		QPointF ip = (*i)->nodePos();
-		qreal top = lij( m, *i ) * (mp.y() - ip.y()) * (mp.x() - ip.x());
-		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
-		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
-		result += kij( m,*i ) * (top/bot);
+		qreal top = kij( m, *i ) * (mp.y() - ip.y()) * (mp.x() - ip.x());
+		qreal bot = pow( distancePoint( mp, ip ), 3.0 );
+        qreal gravity = (3*(mp.y() - ip.y()) * (mp.x() - ip.x()))/pow( distancePoint( mp, ip ), 5.0 );
+		result += kij( m,*i ) * (top/bot) + gravity;
 		//qDebug() << "del2_E__delxm_delym" << result;
 	}
 	//qDebug() << "final del2_E__delxm_delym" << result;
@@ -335,6 +343,7 @@ qreal Graph::del2_E__delxm_delym(Vertex *m)
 }
 
 //kk89 eq 16
+// second derivate after y_m
 qreal Graph::del2_E__del_y2m(Vertex *m)
 {
 	qreal result = 0;
@@ -343,13 +352,13 @@ qreal Graph::del2_E__del_y2m(Vertex *m)
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
 	{
-		if( *i == m || !m_edges.contains(qMakePair(*i,m)) )
+		if( *i == m )
 			continue;
 		QPointF ip = (*i)->nodePos();
-		qreal top = lij( m, *i ) * pow( mp.x() - ip.x(), 2.0 );
-		qreal bot = pow( pow( mp.x() - ip.x(), 2.0)
-		               + pow( mp.y() - ip.y(), 2.0), 1.5 );
-		result += kij( m,*i ) * (1.0 - top/bot);
+		qreal top = kij( m, *i ) * pow( mp.x() - ip.x(), 2.0 );
+		qreal bot = pow( distancePoint( mp, ip ), 3.0 );
+        qreal gravity = 3*pow( mp.y() - ip.y(), 2.0 ) / pow( distancePoint( mp, ip ), 5.0 ) - 1 / pow( distancePoint( mp, ip ), 3.0 );
+		result += kij( m,*i ) * (1.0 - top/bot) + gravity;
 		//qDebug() << "del2_E__del_y2m" << result;
 	}
 	//qDebug() << "final del2_E__del_y2m" << result;
@@ -359,10 +368,9 @@ qreal Graph::del2_E__del_y2m(Vertex *m)
 //from kk89 eq 11, eq 12
 qreal Graph::dx(Vertex *m)
 {
-	qreal top = ((del2_E__delxm_delym(m)*del_E__del_ym(m))/del2_E__del_y2m(m))
+	qreal top = ( ( del2_E__delxm_delym(m) * del_E__del_ym(m) ) / del2_E__del_y2m(m) )
 	            - del_E__del_xm(m);
-	qreal bot = del2_E__del_x2m(m) - pow(del2_E__delxm_delym(m), 2.0)/
-	                                 del2_E__del_y2m(m);
+	qreal bot = del2_E__del_x2m(m) - pow(del2_E__delxm_delym(m), 2.0) / del2_E__del_y2m(m);
 
 	qreal result = top/bot;
 	//qDebug() << "dx" << result;
@@ -408,11 +416,20 @@ void Graph::layoutNGon()
 
 void Graph::layoutRandom(qreal max)
 {
+#ifdef Q_OS_WIN
+    srand(21184);
+#endif
 	for(QMap<uint,Vertex*>::const_iterator i = m_vertices.constBegin();
 	    i != m_vertices.constEnd(); ++i )
 	{
-		qreal x = (drand48() * max * 2 ) -max;
+#ifdef Q_OS_WIN
+        qreal x = ((qreal)rand() / (qreal)RAND_MAX * max * 2 );
+		qreal y = ((qreal)rand() / (qreal)RAND_MAX * max * 2 );
+#else
+        qreal x = (drand48() * max * 2 ) -max;
 		qreal y = (drand48() * max * 2 ) -max;
+#endif
+        qDebug() << "pos:" << x << y;
 		(*i)->setNodePos( QPointF(x,y) );
 	}
 }
@@ -424,7 +441,7 @@ void Graph::layoutKamadaKawai( int maxiter, qreal epsilon, bool initialize)
 		layoutRandom( 100.0 );
 		//layoutNGon();
 	if(maxiter < 0)
-		maxiter = 65535;
+		maxiter = 65536;
 	for(int iteration = 0; iteration < maxiter; ++iteration) {
 		uint id = 0;
 		qreal maxdelta_m = 0.0;
