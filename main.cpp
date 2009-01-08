@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 
 
 	//g->layoutNGon();
-	g->layoutKamadaKawai(-1,0.0001,true);
+	g->layoutKamadaKawai(100,0.0000001,true);
 
 	view->fitInView( view->scene()->sceneRect(),Qt::KeepAspectRatio);
 

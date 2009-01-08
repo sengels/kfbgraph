@@ -23,6 +23,7 @@
 #include <QtCore/QSizeF>
 #include <QtCore/QMap>
 #include <QtCore/QString>
+#include <QtCore/QDebug>
 
 //C std lib for rand()
 #include <stdlib.h>
@@ -60,9 +61,13 @@ Vertex::Vertex(Graph *g, uint id, QString text, QPointF nodePos,
 	//find the size & position of the vertex
 	QFontMetrics m( VERTEXFONT );
 	QRect r = m.boundingRect(m_text);
+	//qDebug() << "font metrics for text:";
+	//qDebug() << m_text;
+	//qDebug() << "suggest rect: " << r << ", size: " << r.size();
 	// adjust for the fact that nodePos is the centre of the rect
 	setRect( QRectF( m_nodePos - QPointF( r.width()/2, r.height()/2 ),
 	         QSizeF( r.size() ) ) );
+	//qDebug() << "set rect: " << rect() << ", size: " << rect().size();
 
 	setZValue(2.0);
 
@@ -90,9 +95,13 @@ void Vertex::setText( const QString &text )
 	//find the size & position of the vertex
 	QFontMetrics m( VERTEXFONT );
 	QRect r = m.boundingRect(m_text);
+	//qDebug() << "font metrics for text:";
+	//qDebug() << m_text;
+	//qDebug() << "suggest rect: " << r << ", size: " << r.size();
 	// adjust for the fact that nodePos is the centre of the rect
 	setRect( QRectF( m_nodePos - QPointF( r.width()/2, r.height()/2 ),
 	         QSizeF( r.size() ) ) );
+	//qDebug() << "set rect: " << rect() << ", size: " << rect().size();
 }
 
 QMap<uint,Vertex*> Vertex::adjacent() const
