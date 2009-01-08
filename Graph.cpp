@@ -12,6 +12,14 @@
 //math
 #include <cmath>
 
+#ifdef Q_CC_MSVC
+#define M_PI 3.14159
+#endif
+#ifdef _WIN32
+#define srand48 srand
+#define drand48 rand
+#endif
+
 // QtGui
 #include <QtGui/QGraphicsScene>
 #include <QtGui/QGraphicsItem>
